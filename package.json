@@ -1,0 +1,16 @@
+{
+  "name": "ltbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ETerekhov",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dropbox": "^4.0.3",
+    "isomorphic-fetch": "^2.2.1",
+    "nconf": "^0.10.0"
+  }
+}
