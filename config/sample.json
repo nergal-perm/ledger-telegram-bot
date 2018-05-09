@@ -1,4 +1,5 @@
 {
-    "accessToken": "Dropbox_account_access_token",
-    "filePath": "/Dropbox_ledger_file_path"
+    "dropboxToken": "Dropbox_account_access_token",
+    "filePath": "/Dropbox_ledger_file_path",
+    "telegramToken": "Telegram bot token"
 }
