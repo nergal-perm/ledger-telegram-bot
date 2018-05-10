@@ -68,16 +68,20 @@ const expenseTypeChooser = new Composer();
 expenseTypeChooser.action('groceries', (ctx) => {
     session.state = { expenseType: "Продукты" };
     return enterAmountStep(ctx);
-})
+});
+expenseTypeChooser.action('pet food', (ctx) => {
+    session.state = { expenseType: "Корм" };
+    return enterAmountStep(ctx);
+});
 expenseTypeChooser.action('transportation', (ctx) => {
     session.state = { expenseType: "Транспорт" };
     return enterAmountStep(ctx);
-})
+});
 expenseTypeChooser.hears(/^Расходы.*/gi, (ctx) => {
     session.state.expenseType = ctx.message.text;
     ctx.reply(`Вы выбрали ${ctx.message.text}, введите сумму:`);
     return ctx.wizard.next();
-})
+});
 expenseTypeChooser.use((ctx) => ctx.replyWithMarkdown('Выберите или введите категорию расходов!'));
 
 // TODO: Можно вынести в отдельный модуль
@@ -92,7 +96,6 @@ expenseAmountHandler.hears(amountRegExp, (ctx) => {
 expenseAmountHandler.use((ctx) => ctx.reply("Введите корректную сумму"));
 
 function getExpenseRecord(ctx) {
-    console.log(JSON.stringify(ctx.message));
     var dateHeader = getDateHeader(ctx.message.date);
     var expenseText = getExpenseText(ctx);
     var sourceAccount = getSourceAccount(ctx.message.from.id);
@@ -126,6 +129,7 @@ const superWizard = new WizardScene('super-wizard',
         ctx.reply('Выберите или введите категорию расходов', Markup.inlineKeyboard([
             Markup.callbackButton('Продукты', 'groceries'),
             Markup.callbackButton('Транспорт', 'transportation'),
+            Markup.callbackButton('Корм', 'pet food'),
         ]).extra());
         return ctx.wizard.next();
     },
@@ -137,6 +141,9 @@ const superWizard = new WizardScene('super-wizard',
 const stage = new Stage([superWizard], { default: 'super-wizard' });
 bot.use(session());
 bot.use(stage.middleware());
+bot.command("expense", (ctx) => {
+    ctx.wizard.enter();
+});
 bot.startPolling();
 
 
@@ -148,7 +155,7 @@ function updateDropboxFile(newExpense) {
         uploadFile(Buffer.concat([buff, new Buffer(newExpense)]));    
   })
   .catch(function(error) {
-    console.log(error);
+    //console.log(error);
   });
 }
 
@@ -159,8 +166,8 @@ function uploadFile(fileContent) {
         path: conf.get('filePath'),
         mode: "overwrite"
     }).then(function(response) {
-        console.log(JSON.stringify(response));
+        //console.log(JSON.stringify(response));
     }).catch(function(error) {
-        console.log(JSON.stringify(error.response));
+        //console.log(JSON.stringify(error.response));
     });
 }
