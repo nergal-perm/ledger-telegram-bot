@@ -1,5 +1,7 @@
 {
     "dropboxToken": "Dropbox_account_access_token",
     "filePath": "/Dropbox_ledger_file_path",
-    "telegramToken": "Telegram bot token"
+    "telegramToken": "Telegram bot token",
+    "allowedUserIds": [123456789, 987654321],
+    "ledgerFileOwnerId": 123456789
 }

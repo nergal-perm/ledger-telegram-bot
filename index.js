@@ -39,7 +39,7 @@ function getTelegramBot(telegramOptions) {
 
 /*
     Общий ход работы с ботом:
-    1. Пользователь отправляет команду /start
+    1. Пользователь отправляет команду /expense
     2. Бот определяет пользователя
     3. Бот отправляет список частых категорий
     4. Пользователь выбирает категорию / вводит категорию руками
@@ -57,6 +57,7 @@ const session = require('telegraf/session');
 const Stage = require('telegraf/stage');
 const Markup = require('telegraf/markup');
 const WizardScene = require('telegraf/scenes/wizard');
+const { enter, leave } = Stage;
 
 function enterAmountStep(ctx) {
     ctx.reply('Введите сумму:');
@@ -82,7 +83,13 @@ expenseTypeChooser.hears(/^Расходы.*/gi, (ctx) => {
     ctx.reply(`Вы выбрали ${ctx.message.text}, введите сумму:`);
     return ctx.wizard.next();
 });
+expenseTypeChooser.command("cancel", cancelWizard);
 expenseTypeChooser.use((ctx) => ctx.replyWithMarkdown('Выберите или введите категорию расходов!'));
+
+function cancelWizard(ctx) {
+    ctx.reply("Запись расхода отменена");
+    leave("super-wizard")(ctx);
+}
 
 // TODO: Можно вынести в отдельный модуль
 const expenseAmountHandler = new Composer();
@@ -90,10 +97,12 @@ var amountRegExp = /^[+-]?\d+([\.,]\d+)?(\s[a-z,а-я]{3})?$/gi;
 expenseAmountHandler.hears(amountRegExp, (ctx) => {
     var expenseRecord = getExpenseRecord(ctx);
     updateDropboxFile(expenseRecord);
-    ctx.replyWithMarkdown('`Done`');
-    return ctx.scene.leave();
+    ctx.reply(`Расход записан:\n${expenseRecord}`);
+    leave("super-wizard")(ctx);
 });
+expenseAmountHandler.command("cancel", cancelWizard);
 expenseAmountHandler.use((ctx) => ctx.reply("Введите корректную сумму"));
+
 
 function getExpenseRecord(ctx) {
     var dateHeader = getDateHeader(ctx.message.date);
@@ -116,7 +125,8 @@ function getExpenseText(ctx) {
 }
 
 function getSourceAccount(userId) {
-    if (userId === 236735928) {
+    console.log(`Got message from userId: ${userId}`)
+    if (userId === conf.get("ledgerFileOwnerId")) {
         return "    Наличные";
     } else {
         return "    Доходы:Ленкин доход";
@@ -132,17 +142,26 @@ const superWizard = new WizardScene('super-wizard',
             Markup.callbackButton('Корм', 'pet food'),
         ]).extra());
         return ctx.wizard.next();
-    },
+    },    
     expenseTypeChooser,
     expenseAmountHandler
 );
 
 
-const stage = new Stage([superWizard], { default: 'super-wizard' });
+const stage = new Stage([superWizard]);
 bot.use(session());
 bot.use(stage.middleware());
 bot.command("expense", (ctx) => {
-    ctx.wizard.enter();
+    if (conf.get("allowedUserIds").includes(ctx.message.from.id)) {
+        enter("super-wizard")(ctx);
+    } else {
+        console.log(ctx.message.from.id);
+        ctx.reply("Извините, Вы не можете пользоваться этим ботом...");
+        leave('super-wizard')(ctx);
+    }
+});
+bot.command("cancel", (ctx) => {
+    leave('super-wizard')(ctx);
 });
 bot.startPolling();
 
