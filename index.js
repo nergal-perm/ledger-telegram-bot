@@ -61,30 +61,32 @@ const { enter, leave } = Stage;
 
 function enterAmountStep(ctx) {
     ctx.reply('Введите сумму:');
-    return ctx.wizard.next();    
+    return ctx.wizard.next();
 }
 
 // TODO: Можно вынести в отдельный модуль
 const expenseTypeChooser = new Composer();
 expenseTypeChooser.action('groceries', (ctx) => {
-    session.state = { expenseType: "Продукты" };
+    ctx.scene.state.expenseType = "Продукты";
     return enterAmountStep(ctx);
 });
 expenseTypeChooser.action('pet food', (ctx) => {
-    session.state = { expenseType: "Корм" };
+    ctx.scene.state.expenseType = "Корм";
     return enterAmountStep(ctx);
 });
 expenseTypeChooser.action('transportation', (ctx) => {
-    session.state = { expenseType: "Транспорт" };
+    ctx.scene.state.expenseType = "Транспорт";
     return enterAmountStep(ctx);
 });
 expenseTypeChooser.hears(/^Расходы.*/gi, (ctx) => {
-    session.state.expenseType = ctx.message.text;
+    ctx.scene.state.expenseType = ctx.message.text;
     ctx.reply(`Вы выбрали ${ctx.message.text}, введите сумму:`);
     return ctx.wizard.next();
 });
 expenseTypeChooser.command("cancel", cancelWizard);
-expenseTypeChooser.use((ctx) => ctx.replyWithMarkdown('Выберите или введите категорию расходов!'));
+expenseTypeChooser.use((ctx) => {
+    ctx.reply('Выберите или введите категорию расходов!');
+});
 
 function cancelWizard(ctx) {
     ctx.reply("Запись расхода отменена");
@@ -121,7 +123,7 @@ function getExpenseText(ctx) {
     if(amountText.substr(-4,1) !== " ") {
         amountText += " руб";
     }
-    return `    ${session.state.expenseType}    ${amountText}`;
+    return `    ${ctx.scene.state.expenseType}    ${amountText}`;
 }
 
 function getSourceAccount(userId) {
@@ -165,6 +167,7 @@ bot.command("cancel", (ctx) => {
 });
 bot.startPolling();
 
+  
 
 // download file from Dropbox and write something to it
 function updateDropboxFile(newExpense) {
